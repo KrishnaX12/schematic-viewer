@@ -118,10 +118,15 @@ const getKeyPriority = (key: string) => {
   return priority === -1 ? priorityKeys.length : priority
 }
 
+const shiftDecimalExponent = (numericValue: number, exponentShift: number) => {
+  const [significand, exponent] = numericValue.toExponential().split("e")
+  // Shift the decimal exponent to avoid floating-point artifacts when scaling units.
+  return Number(`${significand}e${Number(exponent) + exponentShift}`)
+}
+
 const formatComponentValue = (
+  { key, value }: { key: string; value: unknown },
   sourceComponent: SourceComponent,
-  key: string,
-  value: unknown,
 ) => {
   if (key === "name") return String(value)
 
@@ -132,6 +137,30 @@ const formatComponentValue = (
     const propValue =
       key === "resistance" ? displayValue.replace(/Ω$/, "") : displayValue
     return JSON.stringify(propValue)
+  }
+  if (
+    key === "frequency" &&
+    typeof value === "number" &&
+    Number.isFinite(value)
+  ) {
+    const frequencyUnits = [
+      { exponent: 9, unit: "GHz" },
+      { exponent: 6, unit: "MHz" },
+      { exponent: 3, unit: "kHz" },
+      { exponent: 0, unit: "Hz" },
+    ]
+    const { exponent, unit } =
+      frequencyUnits.find(
+        ({ exponent }) => Math.abs(value) >= 10 ** exponent,
+      ) ?? frequencyUnits[frequencyUnits.length - 1]
+    return JSON.stringify(`${shiftDecimalExponent(value, -exponent)}${unit}`)
+  }
+  if (
+    key === "load_capacitance" &&
+    typeof value === "number" &&
+    Number.isFinite(value)
+  ) {
+    return JSON.stringify(`${shiftDecimalExponent(value, 12)}pF`)
   }
   return JSON.stringify(value) ?? String(value)
 }
@@ -157,7 +186,7 @@ export const getSourceComponentInfoEntries = (
     .map(([key, value]) => ({
       key,
       label: key,
-      value: formatComponentValue(sourceComponent, key, value),
+      value: formatComponentValue({ key, value }, sourceComponent),
     }))
 
 export const getSupplierPartNumberEntries = (
