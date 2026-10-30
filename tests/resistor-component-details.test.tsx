@@ -15,7 +15,7 @@ const resistor = circuitJson.find(
 )
 if (!resistor) throw new Error("Expected resistor R1")
 
-test.failing("resistor details preserve the ohm symbol", () => {
+test("resistor details preserve the ohm symbol", () => {
   const html = renderToStaticMarkup(
     <SchematicComponentDetailsTooltip
       sourceComponent={resistor}

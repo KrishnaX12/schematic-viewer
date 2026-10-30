@@ -129,9 +129,7 @@ const formatComponentValue = (
     `display_${key}`
   ]
   if (typeof displayValue === "string" && displayValue.trim()) {
-    const propValue =
-      key === "resistance" ? displayValue.replace(/Ω$/, "") : displayValue
-    return JSON.stringify(propValue)
+    return JSON.stringify(displayValue)
   }
   return JSON.stringify(value) ?? String(value)
 }
